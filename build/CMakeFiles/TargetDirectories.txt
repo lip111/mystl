@@ -1,3 +1,0 @@
-/mnt/e/cpp-learn/mystl/build/CMakeFiles/mystl_test.dir
-/mnt/e/cpp-learn/mystl/build/CMakeFiles/edit_cache.dir
-/mnt/e/cpp-learn/mystl/build/CMakeFiles/rebuild_cache.dir
