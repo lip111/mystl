@@ -4,11 +4,13 @@ using namespace std;
 
 extern void test_allocator();
 extern void test_vector();
+extern void test_memorypool();
 
 int main() {
 
     cout << "wonderful begin!" << endl;
     // test_allocator();
     test_vector();
+    test_memorypool();
     return 0;
 }
