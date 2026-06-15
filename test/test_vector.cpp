@@ -5,7 +5,7 @@
 #include "myvector.h"
 
 // 测试扩容函数
-void test_expand_capacity() {
+void test_vector_expand_capacity() {
     mystl::LVector<std::string> lv{"nishikata", "takagi", "sora"};
     assert(lv.size() == 3);
     assert(lv.capacity() == 3);
@@ -43,7 +43,7 @@ void test_expand_capacity() {
 }
 
 // 测试6大函数：默认\拷贝\移动构造，拷贝\移动赋值、析构
-void test_6functions() {
+void test_vector_6functions() {
     // 默认构造
     mystl::LVector<std::string> lv1;
     assert(lv1.empty());
@@ -80,7 +80,7 @@ void test_6functions() {
 }
 
 // 测试添加元素
-void test_add_element() {
+void test_vector_add_element() {
     // push_back
     mystl::LVector<int> lv;
     lv.push_back(1);
@@ -117,7 +117,7 @@ void test_add_element() {
 }
 
 // 测试删除元素
-void test_delete_element() {
+void test_vector_delete_element() {
     
     mystl::LVector<int> lv = {1,9,9,7,1,1,1,3};
     //pop_back
@@ -140,7 +140,7 @@ void test_delete_element() {
 }
 
 // 测试访问元素
-void test_get_element() {
+void test_vector_get_element() {
     
     mystl::LVector<int> lv = {5,2,0,1,3,1,4};
     // front
@@ -166,11 +166,33 @@ void test_get_element() {
     assert(2 == a);
 }
 
+struct VectorBadType {
+    int val_;
+    VectorBadType(int val): val_(val) {}
+    VectorBadType(VectorBadType&& badtype) noexcept: val_(badtype.val_) {}
+    VectorBadType(const VectorBadType& badtype) {
+        throw std::runtime_error("my custom error");
+    }
+};
+
+// 测试拷贝构造中途出异常，能否避免内存泄漏
+void test_vector_vector_error() {
+    mystl::LVector<VectorBadType> lv1;
+    lv1.push_back(1);
+
+    try {
+        mystl::LVector<VectorBadType> lv2 = lv1;
+    } catch(std::runtime_error& e) {
+        // std::cout << e.what() << std::endl;
+        assert(std::string("my custom error") == e.what());
+    }
+}
 
 void test_vector() {
-    test_expand_capacity();
-    test_6functions();
-    test_add_element();
-    test_delete_element();
-    test_get_element();
+    test_vector_expand_capacity();
+    test_vector_6functions();
+    test_vector_add_element();
+    test_vector_delete_element();
+    test_vector_get_element();
+    test_vector_vector_error();
 }

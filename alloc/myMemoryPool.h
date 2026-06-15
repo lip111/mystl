@@ -76,14 +76,13 @@ public:
     }
 
     template<typename T, typename... Args>
-    void construct(void* p, Args&&... args) {
+    void construct(T* p, Args&&... args) {
         new (p) T(std::forward<Args>(args)...);
     }
 
     template<typename T>
-    void destroy(void* p) {
-        T* pp = static_cast<T*>(p);
-        pp->~T();
+    void destroy(T* p) {
+        p->~T();
     }
     
     const void* get_page_list() {
@@ -138,11 +137,11 @@ public:
 
     template<typename... Args>
     void construct(T* p, Args&&... args) {
-        get_pool().construct<T>(p, std::forward<Args>(args)...);
+        get_pool().construct(p, std::forward<Args>(args)...);
     }
 
     void destroy(T* p) {
-        get_pool().destroy<T>(p);
+        get_pool().destroy(p);
     }
 };
 

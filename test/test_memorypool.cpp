@@ -27,8 +27,8 @@ void test_memorypool()
 
     mempool.deallocate(p); // 还到当前页还是所属页？
 
-    mempool.construct<TestMemoryPoolObj>(p2);
-    mempool.destroy<TestMemoryPoolObj>(p2);
+    mempool.construct(static_cast<TestMemoryPoolObj*>(p2));
+    mempool.destroy(static_cast<TestMemoryPoolObj*>(p2));
 
     // std::cout << mempool.get_free_list() << std::endl;
     // std::cout << mempool.get_page_list() << std::endl;
