@@ -426,50 +426,28 @@ typename LList<T, Alloc>::iterator LList<T, Alloc>::insert(const_iterator pos, T
 template<typename T, typename Alloc>
 template<typename InputIt>
 typename LList<T, Alloc>::iterator LList<T, Alloc>::insert(const_iterator pos, InputIt first, InputIt last) {
-    
-    Node* newHead = nullptr;
-    Node* newTail = nullptr;
+
+    if (first == last) return ListIterator(const_cast<Node*>(pos.node));
     InputIt node_iter = first;
     size_type new_size_ = 0;
+    LList ls;
     while(node_iter != last) {
-        Node* newNode = nullptr;
-        try {
-            newNode = std::allocator_traits<NodeAlloc>::allocate(node_alloc, 1);
-            std::allocator_traits<NodeAlloc>::construct(node_alloc, newNode, *node_iter);
-        }
-        catch(...) {
-            // 1.本次出现创建Node异常，先把之前创建的Node全部释放掉
-            Node* node = newHead;
-            while(node != nullptr) {
-                Node* temp = node->next;
-                std::allocator_traits<NodeAlloc>::destroy(node_alloc, node);
-                std::allocator_traits<NodeAlloc>::deallocate(node_alloc, node, 1);
-                node = temp;
-            }
-            // 2.如果本次是construct异常，需要多释放一次，否则不需要
-            if(newNode) std::allocator_traits<NodeAlloc>::deallocate(node_alloc, newNode, 1);
-            throw;
-        }
-
-        if(!newTail)
-            newHead = newNode;
-        else {
-            newTail->next = newNode;
-            newNode->prev = newTail;
-        }
-        newTail = newNode;
+        ls.push_back(*node_iter);
         ++new_size_;
         ++node_iter;
     }
 
     Node* p = const_cast<Node*>(pos.node);
-    p->prev->next = newHead;
-    newHead->prev = p->prev;
-    newTail->next = p;
-    p->prev = newTail;
+    p->prev->next = ls.dummy->next;
+    ls.dummy->next->prev = p->prev;
+    ls.dummy->prev->next = p;
+    p->prev = ls.dummy->prev;
+    ListIterator it = ListIterator(ls.dummy->next);
 
+    ls.dummy->next = ls.dummy;
+    ls.dummy->prev = ls.dummy;
     size_ += new_size_;
-    return ListIterator(newHead);
+    return it;
 }
 
 template<typename T, typename Alloc>
