@@ -125,7 +125,7 @@ template<typename T, typename Alloc>
 LVector<T, Alloc>& LVector<T, Alloc>::operator=(LVector<T, Alloc>&& lv) noexcept {
     if(this == &lv) return *this;
     swap(lv);
-    lv.first = lv.last = lv.cap = nullptr;
+    // lv.first = lv.last = lv.cap = nullptr; // 不能置为nullptr,旧资源未释放导致内存泄漏！！！
     return *this;
 }
 
