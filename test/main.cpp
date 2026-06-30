@@ -7,6 +7,7 @@ extern void test_vector();
 extern void test_memorypool();
 extern void test_list();
 extern void test_deque();
+extern void test_rbtree();
 
 int main() {
 
@@ -16,5 +17,6 @@ int main() {
     test_memorypool();
     test_list();
     test_deque();
+    test_rbtree();
     return 0;
 }
