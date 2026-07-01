@@ -1,8 +1,9 @@
 #pragma once
 #include <functional>
+#include <memory>
 //下面的测试用
-#include <iostream>
-#include <queue>
+// #include <iostream>
+// #include <queue>
 
 namespace mystl {
 
@@ -17,7 +18,7 @@ public:
     using const_iterator = LRBTreeIterator<const Value*, const Value&>;
 
     // 6大函数
-    LRBTree(): dummy(new Node()), size_(0) { root = dummy; }
+    LRBTree(): dummy(new Node()), root(dummy), size_(0) {}
     LRBTree(const LRBTree& tree) = delete;
     LRBTree& operator=(const LRBTree& tree) = delete;
     LRBTree(LRBTree&& tree) noexcept = delete;
@@ -26,6 +27,7 @@ public:
         clear();
         delete dummy;
     }
+    explicit LRBTree(Compare comp): comp_(comp), dummy(new Node()), root(dummy), size_(0) {}
 
     // 获取容量
     size_type size() const { return size_; }
@@ -122,39 +124,39 @@ private:
     Node* copy_subtree(Node* src_node, Node* parent);
 
 
-    // 打印红黑树(方便测试)
-    void print_tree(Node* node) {
-        if (node == nullptr || node->parent == node) return;
+    // // 打印红黑树(方便测试)
+    // void print_tree(Node* node) {
+    //     if (node == nullptr || node->parent == node) return;
         
-        std::queue<Node*> que;
-        Node* curr = node;
-        que.push(curr);
-        while(!que.empty()) {
-            int n = que.size();
-            while(n--) {
-                curr = que.front();
-                que.pop();
+    //     std::queue<Node*> que;
+    //     Node* curr = node;
+    //     que.push(curr);
+    //     while(!que.empty()) {
+    //         int n = que.size();
+    //         while(n--) {
+    //             curr = que.front();
+    //             que.pop();
 
-                // 打印格式：当前节点值(父节点值,是父节点左孩子L/右孩子R,当前节点颜色)
-                // 6(10,L,RED)
-                if (curr->parent == dummy)
-                        std::cout << curr->value << "(" << "NULL" << ","
-                        << "NULL" << ","
-                        << (curr->color == RED ? "RED":"BLACK") << ")" << "     ";
-                else
-                    std::cout << curr->value << "(" << curr->parent->value << ","
-                        << (curr->parent->left == curr ? "L":"R") << ","
-                        << (curr->color == RED ? "RED":"BLACK") << ")" << "     ";
+    //             // 打印格式：当前节点值(父节点值,是父节点左孩子L/右孩子R,当前节点颜色)
+    //             // 6(10,L,RED)
+    //             if (curr->parent == dummy)
+    //                     std::cout << curr->value << "(" << "NULL" << ","
+    //                     << "NULL" << ","
+    //                     << (curr->color == RED ? "RED":"BLACK") << ")" << "     ";
+    //             else
+    //                 std::cout << curr->value << "(" << curr->parent->value << ","
+    //                     << (curr->parent->left == curr ? "L":"R") << ","
+    //                     << (curr->color == RED ? "RED":"BLACK") << ")" << "     ";
 
-                if (curr->left != dummy)
-                    que.push(curr->left);
-                if (curr->right != dummy)
-                    que.push(curr->right);   
-            }
-            std::cout << "" << std::endl;
-        }
-        std::cout << "" << std::endl;
-    }
+    //             if (curr->left != dummy)
+    //                 que.push(curr->left);
+    //             if (curr->right != dummy)
+    //                 que.push(curr->right);   
+    //         }
+    //         std::cout << "" << std::endl;
+    //     }
+    //     std::cout << "" << std::endl;
+    // }
 };
 
 template<typename Key, typename Value, typename KeyOfValue, typename Compare>
@@ -183,7 +185,7 @@ public:
     }
 
     pointer operator->() const {
-        return node_;
+        return &node_->value;
     }
 
     reference operator*() const {
@@ -405,9 +407,11 @@ std::pair<typename LRBTree<Key,Value,KeyOfValue,Compare>::iterator, bool>
     Key target_key = kov(newNode->value);  
     while(curr != dummy) {
         Key curr_key = kov(curr->value);
-        if (!comp_(target_key, curr_key) && !comp_(curr_key, target_key))
+        if (!comp_(target_key, curr_key) && !comp_(curr_key, target_key)) {
+            delete newNode;    // 插入失败要释放新创建出来的节点！！！
             return {iterator(curr,dummy), false};
-
+        }
+            
         parent = curr;
         if (comp_(target_key, curr_key))
             curr = curr->left;
@@ -445,13 +449,15 @@ std::pair<typename LRBTree<Key,Value,KeyOfValue,Compare>::iterator, bool>
         insert_fixup(newNode);
     }
     
-    if (newNode == root) {
+    // if (newNode == root) {
+    // newNode有可能是调整为root,这时并不更新dummy的left和right,只在newNode为rbtree第一个节点时进入分支！！！
+    if (newNode == root && newNode->left == dummy && newNode->right == dummy) {
         dummy->left = newNode;
         dummy->right = newNode;
     }
-    else if (comp_(newNode->value, dummy->left->value))
+    else if (comp_(kov(newNode->value), kov(dummy->left->value)))   // 比较的是key不是value！！！
         dummy->left = newNode;
-    else if (comp_(dummy->right->value, newNode->value))
+    else if (comp_(kov(dummy->right->value), kov(newNode->value)))
         dummy->right = newNode;
 
     ++size_;
@@ -565,7 +571,9 @@ void LRBTree<Key,Value,KeyOfValue,Compare>::erase(const_iterator pos) {
     Node* node = pos.node_;
     if (node->left != dummy && node->right != dummy) {
         Node* successor = minimum(node->right);
-        node->value = successor->value;
+        // node->value = successor->value;  //这里value为pair<const Key,T>时不支持拷贝赋值，需修改！！！
+        std::destroy_at(&node->value);
+        ::new (&node->value) Value(std::move(successor->value));
         node = successor;
     }
 

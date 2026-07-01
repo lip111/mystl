@@ -10,6 +10,8 @@ extern void test_deque();
 extern void test_rbtree();
 extern void test_stack();
 extern void test_queue();
+extern void test_set();
+extern void test_map();
 
 int main() {
 
@@ -22,5 +24,7 @@ int main() {
     test_rbtree();
     test_stack();
     test_queue();
+    test_set();
+    test_map();
     return 0;
 }
